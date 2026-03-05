@@ -100,7 +100,7 @@ def _placeholder(size: int) -> QPixmap:
 class _TrackDelegate(QStyledItemDelegate):
     """Renders each track row: number | bold title | duration."""
 
-    ROW_H = 52
+    ROW_H = 68
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index) -> None:
         painter.save()
@@ -115,28 +115,28 @@ class _TrackDelegate(QStyledItemDelegate):
         else:
             painter.fillRect(r, QColor(WHITE))
 
-        text_col   = QColor(WHITE)   if selected else QColor(BLACK)
-        muted_col  = QColor(GRAY4)   if selected else QColor(GRAY3)
+        text_col  = QColor(WHITE) if selected else QColor(BLACK)
+        muted_col = QColor(GRAY4) if selected else QColor(GRAY3)
 
-        # Track number  (mono, gray, right-aligned in 44px column)
+        # Track number (mono, gray, right-aligned)
         num = index.data(Qt.UserRole) or ""
-        painter.setFont(QFont("JetBrains Mono", 10))
+        painter.setFont(QFont("JetBrains Mono", 12))
         painter.setPen(muted_col)
-        num_rect = QRect(r.x() + 20, r.y(), 28, r.height())
+        num_rect = QRect(r.x() + 24, r.y(), 32, r.height())
         painter.drawText(num_rect, Qt.AlignRight | Qt.AlignVCenter, num)
 
-        # Title (Inter, weight 600, 14px)
+        # Title (Inter, bold, 17px)
         title = index.data(Qt.DisplayRole) or ""
         painter.setPen(text_col)
-        painter.setFont(QFont("Inter", 14, QFont.Weight.DemiBold))
-        title_rect = QRect(r.x() + 58, r.y(), r.width() - 130, r.height())
+        painter.setFont(QFont("Inter", 17, QFont.Weight.DemiBold))
+        title_rect = QRect(r.x() + 68, r.y(), r.width() - 150, r.height())
         painter.drawText(title_rect, Qt.AlignLeft | Qt.AlignVCenter, title)
 
         # Duration (mono, gray, right)
         dur = index.data(Qt.UserRole + 1) or ""
         painter.setPen(muted_col)
-        painter.setFont(QFont("JetBrains Mono", 10))
-        dur_rect = QRect(r.x() + r.width() - 64, r.y(), 56, r.height())
+        painter.setFont(QFont("JetBrains Mono", 12))
+        dur_rect = QRect(r.x() + r.width() - 76, r.y(), 68, r.height())
         painter.drawText(dur_rect, Qt.AlignRight | Qt.AlignVCenter, dur)
 
         # Bottom divider
@@ -159,14 +159,14 @@ class _AlbumRow(QFrame):
         self._on_click = on_click
         self._active   = False
         self.setCursor(Qt.PointingHandCursor)
-        self.setFixedHeight(58)
+        self.setFixedHeight(68)
 
         lay = QHBoxLayout(self)
-        lay.setContentsMargins(10, 8, 10, 8)
-        lay.setSpacing(12)
+        lay.setContentsMargins(12, 10, 12, 10)
+        lay.setSpacing(14)
 
         self._circle = QLabel(str(number))
-        self._circle.setFixedSize(24, 24)
+        self._circle.setFixedSize(30, 30)
         self._circle.setAlignment(Qt.AlignCenter)
         lay.addWidget(self._circle)
 
@@ -174,7 +174,7 @@ class _AlbumRow(QFrame):
         col.setAttribute(Qt.WA_TransparentForMouseEvents)
         clay = QVBoxLayout(col)
         clay.setContentsMargins(0, 0, 0, 0)
-        clay.setSpacing(1)
+        clay.setSpacing(2)
         self._title = QLabel(name[:32] + ("…" if len(name) > 32 else ""))
         self._sub   = QLabel("—")
         clay.addWidget(self._title)
@@ -196,14 +196,14 @@ class _AlbumRow(QFrame):
                 "QFrame { background: #f5f5f5; border: 1.5px solid #0a0a0a; border-radius: 4px; }"
             )
             self._circle.setStyleSheet(
-                f"background: #0a0a0a; color: #ffffff; border-radius: 12px;"
-                f" font-family: {MONO}; font-size: 10px; font-weight: 700;"
+                f"background: #0a0a0a; color: #ffffff; border-radius: 15px;"
+                f" font-family: {MONO}; font-size: 11px; font-weight: 700;"
             )
             self._title.setStyleSheet(
-                "color: #0a0a0a; font-size: 13px; font-weight: 600; background: transparent;"
+                "color: #0a0a0a; font-size: 14px; font-weight: 600; background: transparent;"
             )
             self._sub.setStyleSheet(
-                f"color: {GRAY4}; font-size: 10px; font-family: {MONO}; background: transparent;"
+                f"color: {GRAY4}; font-size: 11px; font-family: {MONO}; background: transparent;"
             )
         else:
             self.setStyleSheet(
@@ -211,11 +211,11 @@ class _AlbumRow(QFrame):
             )
             self._circle.setStyleSheet(
                 f"background: transparent; color: {GRAY4}; border: 1.5px solid {GRAY3};"
-                f" border-radius: 12px; font-family: {MONO}; font-size: 10px;"
+                f" border-radius: 15px; font-family: {MONO}; font-size: 11px;"
             )
-            self._title.setStyleSheet(f"color: {GRAY4}; font-size: 13px; background: transparent;")
+            self._title.setStyleSheet(f"color: {GRAY4}; font-size: 14px; background: transparent;")
             self._sub.setStyleSheet(
-                f"color: {GRAY3}; font-size: 10px; font-family: {MONO}; background: transparent;"
+                f"color: {GRAY3}; font-size: 11px; font-family: {MONO}; background: transparent;"
             )
 
     def enterEvent(self, _e) -> None:
@@ -223,7 +223,7 @@ class _AlbumRow(QFrame):
             self.setStyleSheet(
                 "QFrame { background: #f5f5f5; border: 1.5px solid transparent; border-radius: 4px; }"
             )
-            self._title.setStyleSheet("color: #0a0a0a; font-size: 13px; background: transparent;")
+            self._title.setStyleSheet("color: #0a0a0a; font-size: 14px; background: transparent;")
 
     def leaveEvent(self, _e) -> None:
         if not self._active:
@@ -369,31 +369,34 @@ class SophaxPlay(QMainWindow):
 
     def _build_header(self) -> QWidget:
         h = QWidget()
-        h.setFixedHeight(56)
+        h.setFixedHeight(64)
         h.setStyleSheet(f"background: {WHITE}; border-bottom: 1.5px solid {BLACK};")
         lay = QHBoxLayout(h)
         lay.setContentsMargins(32, 0, 32, 0)
 
-        logo = QLabel("◆  SophaxPlay")
-        logo.setStyleSheet(
-            f"color: {BLACK}; font-size: 15px; font-weight: 700;"
-            " letter-spacing: 0.04em; background: transparent; border: none;"
-        )
-        lay.addWidget(logo)
+        # Try to load logo PNG; fall back to text
+        logo_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sophaxplay_logo.png")
+        logo_lbl = QLabel()
+        logo_lbl.setStyleSheet("background: transparent; border: none;")
+        if os.path.exists(logo_path):
+            px = QPixmap(logo_path)
+            if not px.isNull():
+                px = px.scaledToHeight(36, Qt.SmoothTransformation)
+                logo_lbl.setPixmap(px)
+        if logo_lbl.pixmap() is None or logo_lbl.pixmap().isNull():
+            logo_lbl.setText("◆  SophaxPlay")
+            logo_lbl.setStyleSheet(
+                f"color: {BLACK}; font-size: 17px; font-weight: 700;"
+                " letter-spacing: 0.03em; background: transparent; border: none;"
+            )
+        lay.addWidget(logo_lbl)
         lay.addStretch()
-
-        sub = QLabel("MP3 · FLAC")
-        sub.setStyleSheet(
-            f"color: {GRAY4}; font-size: 11px; font-family: {MONO};"
-            " background: transparent; border: none;"
-        )
-        lay.addWidget(sub)
 
         badge = QLabel("PLAYER")
         badge.setStyleSheet(
             f"color: {BLACK}; font-size: 10px; font-weight: 700;"
             f" font-family: {MONO}; letter-spacing: 2px;"
-            f" padding: 4px 10px; border: 1.5px solid {BLACK};"
+            f" padding: 5px 12px; border: 1.5px solid {BLACK};"
             " border-radius: 2px; background: transparent; margin-left: 16px;"
         )
         lay.addWidget(badge)
@@ -404,18 +407,25 @@ class SophaxPlay(QMainWindow):
     def _build_sidebar(self) -> QWidget:
         w = QWidget()
         w.setFixedWidth(260)
-        w.setStyleSheet(f"background: {WHITE}; border-right: 1.5px solid {BLACK};")
+        w.setStyleSheet(f"background: {WHITE};")
         lay = QVBoxLayout(w)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
+
+        # Upper area (ALBUMS label + list) — black right border stops here
+        upper = QWidget()
+        upper.setStyleSheet(f"background: {WHITE}; border-right: 1.5px solid {BLACK};")
+        upper_lay = QVBoxLayout(upper)
+        upper_lay.setContentsMargins(0, 0, 0, 0)
+        upper_lay.setSpacing(0)
 
         lbl = QLabel("ALBUMS")
         lbl.setStyleSheet(
             f"color: {GRAY4}; font-size: 9px; font-weight: 700;"
             f" font-family: {MONO}; letter-spacing: 2px;"
-            f" padding: 20px 20px 10px; background: {WHITE}; border: none;"
+            f" padding: 20px 20px 10px; background: transparent; border: none;"
         )
-        lay.addWidget(lbl)
+        upper_lay.addWidget(lbl)
 
         scroll = QScrollArea()
         scroll.setObjectName("albumScroll")
@@ -431,8 +441,10 @@ class SophaxPlay(QMainWindow):
         self._albums_lay.addStretch()
 
         scroll.setWidget(inner)
-        lay.addWidget(scroll, 1)
+        upper_lay.addWidget(scroll, 1)
+        lay.addWidget(upper, 1)
 
+        # Lower area (divider + ADD FILES) — no right border
         div = QFrame()
         div.setFixedHeight(1)
         div.setStyleSheet(f"background: {GRAY2}; border: none;")
@@ -510,7 +522,7 @@ class SophaxPlay(QMainWindow):
 
     def _build_footer(self) -> QWidget:
         bar = QWidget()
-        bar.setFixedHeight(64)
+        bar.setFixedHeight(76)
         bar.setStyleSheet(f"background: {WHITE}; border-top: 1.5px solid {BLACK};")
         vlay = QVBoxLayout(bar)
         vlay.setContentsMargins(0, 0, 0, 0)
@@ -528,54 +540,68 @@ class SophaxPlay(QMainWindow):
             QSlider::sub-page:horizontal {{ background: {BLACK}; border: none; }}
             QSlider::handle:horizontal {{ width: 0px; height: 0px; margin: 0; }}
             QSlider::handle:horizontal:hover {{
-                background: {BLACK}; width: 10px; height: 10px;
-                margin: -3px 0; border-radius: 5px; border: none;
+                background: {BLACK}; width: 12px; height: 12px;
+                margin: -4px 0; border-radius: 6px; border: none;
             }}
         """)
         self.progress.sliderPressed.connect(lambda: setattr(self, "_seeking", True))
         self.progress.sliderReleased.connect(self._on_seek_release)
         vlay.addWidget(self.progress)
 
-        # Controls
+        # Controls row
         row = QWidget()
         row.setStyleSheet(f"background: {WHITE}; border: none;")
         hlay = QHBoxLayout(row)
         hlay.setContentsMargins(28, 0, 28, 0)
-        hlay.setSpacing(0)
+        hlay.setSpacing(8)
 
+        # Time label
         self.lbl_time = QLabel("0:00 / 0:00")
         self.lbl_time.setStyleSheet(
-            f"color: {GRAY4}; font-size: 11px; font-family: {MONO};"
+            f"color: {GRAY4}; font-size: 12px; font-family: {MONO};"
             " background: transparent; border: none;"
         )
         hlay.addWidget(self.lbl_time)
         hlay.addStretch()
 
-        for sym, cb in [("⏮", self.previous), ("⏹", self.stop), ("⏭", self.next_track)]:
-            b = QPushButton(sym)
-            b.setObjectName("ctrlBtn")
+        # Transport buttons — SophaxPay badge style (outlined, mono, uppercase)
+        badge_style = (
+            f"QPushButton {{"
+            f"  background: transparent; color: {BLACK};"
+            f"  border: 1.5px solid {GRAY3}; border-radius: 2px;"
+            f"  font-family: {MONO}; font-size: 10px; font-weight: 700;"
+            f"  letter-spacing: 1px; padding: 5px 14px;"
+            f"}}"
+            f"QPushButton:hover {{"
+            f"  border-color: {BLACK}; color: {BLACK};"
+            f"}}"
+        )
+        for label, cb in [("◀ PREV", self.previous), ("■ STOP", self.stop), ("NEXT ▶", self.next_track)]:
+            b = QPushButton(label)
+            b.setStyleSheet(badge_style)
             b.clicked.connect(cb)
             hlay.addWidget(b)
 
         hlay.addSpacing(16)
 
+        # Volume
         vol = QLabel("VOL")
         vol.setStyleSheet(
-            f"color: {GRAY3}; font-size: 9px; font-family: {MONO};"
-            " letter-spacing: 1px; padding-right: 6px; background: transparent; border: none;"
+            f"color: {GRAY3}; font-size: 10px; font-family: {MONO};"
+            " letter-spacing: 1px; padding-right: 4px; background: transparent; border: none;"
         )
         hlay.addWidget(vol)
 
         self.vol_slider = QSlider(Qt.Horizontal)
         self.vol_slider.setRange(0, 100)
         self.vol_slider.setValue(70)
-        self.vol_slider.setFixedWidth(70)
+        self.vol_slider.setFixedWidth(80)
         self.vol_slider.setStyleSheet(f"""
             QSlider::groove:horizontal {{ height: 2px; background: {GRAY2}; border: none; }}
             QSlider::sub-page:horizontal {{ background: {BLACK}; border: none; }}
             QSlider::handle:horizontal {{
-                background: {BLACK}; width: 8px; height: 8px;
-                margin: -3px 0; border-radius: 4px; border: none;
+                background: {BLACK}; width: 10px; height: 10px;
+                margin: -4px 0; border-radius: 5px; border: none;
             }}
         """)
         self.vol_slider.valueChanged.connect(
@@ -584,6 +610,7 @@ class SophaxPlay(QMainWindow):
         hlay.addWidget(self.vol_slider)
         hlay.addSpacing(16)
 
+        # Main play/pause button — solid black (SophaxPay "▶ START DEMO" style)
         self.btn_play = QPushButton("▶  PLAY")
         self.btn_play.setObjectName("playBtn")
         self.btn_play.clicked.connect(self.toggle_play)
