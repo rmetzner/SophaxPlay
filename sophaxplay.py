@@ -277,24 +277,29 @@ QPushButton#playBtn {{
     color: {WHITE};
     border: none;
     font-family: {MONO};
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    padding: 14px 40px;
+    border-radius: 3px;
+    min-width: 160px;
+}}
+QPushButton#playBtn:hover {{ background: #222222; }}
+
+/* Transport badge buttons */
+QPushButton#ctrlBtn {{
+    background: transparent;
+    color: {BLACK};
+    border: 1.5px solid {GRAY3};
+    border-radius: 2px;
+    font-family: {MONO};
     font-size: 11px;
     font-weight: 700;
     letter-spacing: 1px;
-    padding: 9px 24px;
-    border-radius: 3px;
-    min-width: 120px;
+    padding: 12px 22px;
+    min-width: 72px;
 }}
-QPushButton#playBtn:hover {{ background: #1a1a1a; }}
-
-/* Small transport buttons */
-QPushButton#ctrlBtn {{
-    background: transparent;
-    color: {GRAY3};
-    border: none;
-    font-size: 15px;
-    padding: 4px 10px;
-}}
-QPushButton#ctrlBtn:hover {{ color: {BLACK}; }}
+QPushButton#ctrlBtn:hover {{ border-color: {BLACK}; }}
 
 /* Add files */
 QPushButton#addBtn {{
@@ -514,6 +519,7 @@ class SophaxPlay(QMainWindow):
         self.track_list.setItemDelegate(_TrackDelegate())
         self.track_list.setMouseTracking(True)
         self.track_list.itemDoubleClicked.connect(self._on_track_dclick)
+        self.track_list.itemClicked.connect(self._on_track_dclick)
         lay.addWidget(self.track_list, 1)
 
         return w
@@ -522,41 +528,42 @@ class SophaxPlay(QMainWindow):
 
     def _build_footer(self) -> QWidget:
         bar = QWidget()
-        bar.setFixedHeight(76)
+        bar.setFixedHeight(100)
         bar.setStyleSheet(f"background: {WHITE}; border-top: 1.5px solid {BLACK};")
         vlay = QVBoxLayout(bar)
         vlay.setContentsMargins(0, 0, 0, 0)
         vlay.setSpacing(0)
 
-        # Progress line (full width, 3px)
+        # Progress bar (full width, 4px, clickable)
         self.progress = QSlider(Qt.Horizontal)
         self.progress.setRange(0, 1000)
-        self.progress.setFixedHeight(3)
+        self.progress.setFixedHeight(4)
         self.progress.setStyleSheet(f"""
             QSlider {{ background: {GRAY2}; border: none; }}
             QSlider::groove:horizontal {{
-                height: 3px; background: {GRAY2}; margin: 0; border: none;
+                height: 4px; background: {GRAY2}; margin: 0; border: none;
             }}
             QSlider::sub-page:horizontal {{ background: {BLACK}; border: none; }}
             QSlider::handle:horizontal {{ width: 0px; height: 0px; margin: 0; }}
             QSlider::handle:horizontal:hover {{
-                background: {BLACK}; width: 12px; height: 12px;
-                margin: -4px 0; border-radius: 6px; border: none;
+                background: {BLACK}; width: 14px; height: 14px;
+                margin: -5px 0; border-radius: 7px; border: none;
             }}
         """)
         self.progress.sliderPressed.connect(lambda: setattr(self, "_seeking", True))
         self.progress.sliderReleased.connect(self._on_seek_release)
         vlay.addWidget(self.progress)
 
-        # Controls row
+        # Controls row: [time]  [stretch]  [PREV][STOP][PLAY][NEXT]  [stretch]  [VOL]
         row = QWidget()
         row.setStyleSheet(f"background: {WHITE}; border: none;")
         hlay = QHBoxLayout(row)
         hlay.setContentsMargins(28, 0, 28, 0)
-        hlay.setSpacing(8)
+        hlay.setSpacing(10)
 
-        # Time label
+        # Time label (left)
         self.lbl_time = QLabel("0:00 / 0:00")
+        self.lbl_time.setFixedWidth(110)
         self.lbl_time.setStyleSheet(
             f"color: {GRAY4}; font-size: 12px; font-family: {MONO};"
             " background: transparent; border: none;"
@@ -564,60 +571,49 @@ class SophaxPlay(QMainWindow):
         hlay.addWidget(self.lbl_time)
         hlay.addStretch()
 
-        # Transport buttons — SophaxPay badge style (outlined, mono, uppercase)
-        badge_style = (
-            f"QPushButton {{"
-            f"  background: transparent; color: {BLACK};"
-            f"  border: 1.5px solid {GRAY3}; border-radius: 2px;"
-            f"  font-family: {MONO}; font-size: 10px; font-weight: 700;"
-            f"  letter-spacing: 1px; padding: 5px 14px;"
-            f"}}"
-            f"QPushButton:hover {{"
-            f"  border-color: {BLACK}; color: {BLACK};"
-            f"}}"
-        )
+        # Transport controls (centered)
         for label, cb in [("◀ PREV", self.previous), ("■ STOP", self.stop), ("NEXT ▶", self.next_track)]:
             b = QPushButton(label)
-            b.setStyleSheet(badge_style)
+            b.setObjectName("ctrlBtn")
             b.clicked.connect(cb)
             hlay.addWidget(b)
 
-        hlay.addSpacing(16)
+        hlay.addSpacing(12)
 
-        # Volume
+        self.btn_play = QPushButton("▶  PLAY")
+        self.btn_play.setObjectName("playBtn")
+        self.btn_play.clicked.connect(self.toggle_play)
+        hlay.addWidget(self.btn_play)
+
+        hlay.addStretch()
+
+        # Volume (right)
         vol = QLabel("VOL")
         vol.setStyleSheet(
             f"color: {GRAY3}; font-size: 10px; font-family: {MONO};"
-            " letter-spacing: 1px; padding-right: 4px; background: transparent; border: none;"
+            " letter-spacing: 1px; background: transparent; border: none;"
         )
         hlay.addWidget(vol)
 
         self.vol_slider = QSlider(Qt.Horizontal)
         self.vol_slider.setRange(0, 100)
         self.vol_slider.setValue(70)
-        self.vol_slider.setFixedWidth(80)
+        self.vol_slider.setFixedWidth(100)
         self.vol_slider.setStyleSheet(f"""
-            QSlider::groove:horizontal {{ height: 2px; background: {GRAY2}; border: none; }}
+            QSlider::groove:horizontal {{ height: 3px; background: {GRAY2}; border: none; }}
             QSlider::sub-page:horizontal {{ background: {BLACK}; border: none; }}
             QSlider::handle:horizontal {{
-                background: {BLACK}; width: 10px; height: 10px;
-                margin: -4px 0; border-radius: 5px; border: none;
+                background: {BLACK}; width: 12px; height: 12px;
+                margin: -5px 0; border-radius: 6px; border: none;
             }}
         """)
         self.vol_slider.valueChanged.connect(
             lambda v: pygame.mixer.music.set_volume(v / 100)
         )
         hlay.addWidget(self.vol_slider)
-        hlay.addSpacing(16)
-
-        # Main play/pause button — solid black (SophaxPay "▶ START DEMO" style)
-        self.btn_play = QPushButton("▶  PLAY")
-        self.btn_play.setObjectName("playBtn")
-        self.btn_play.clicked.connect(self.toggle_play)
-        hlay.addWidget(self.btn_play)
 
         pygame.mixer.music.set_volume(0.7)
-        vlay.addWidget(row)
+        vlay.addWidget(row, 1)
         return bar
 
     # ── Data ───────────────────────────────────────────────────────────────────
@@ -694,6 +690,7 @@ class SophaxPlay(QMainWindow):
         self.is_playing = True
         self.is_paused  = False
         self.btn_play.setText("⏸  PAUSE")
+        self.setWindowTitle(f"{t['title']} — SophaxPlay")
 
         self.info_album.setText(t["album"])
         self.info_artist.setText(t["artist"])
@@ -730,6 +727,7 @@ class SophaxPlay(QMainWindow):
         self.progress.setValue(0)
         self.lbl_time.setText("0:00 / 0:00")
         self.btn_play.setText("▶  PLAY")
+        self.setWindowTitle("SophaxPlay")
 
     def next_track(self) -> None:
         tracks = self.album_tracks.get(self.playing_album, [])
